@@ -11,7 +11,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
-  <!-- Style -->
   <link rel="stylesheet" href="../../css/style.css">
 </head>
 
@@ -31,9 +30,12 @@
   <!-- MAIN -->
   <main class="main">
     <h1><i class="fas fa-route"></i> Orbital Routes</h1>
-    <p class="muted">All available flights for your Virtual Airline</p>
 
-    <table>
+    <!-- Search -->
+    <input type="text" id="searchRoutes" placeholder="Search routes..." class="search-input">
+
+    <!-- Table -->
+    <table id="routesTable">
       <thead>
         <tr>
           <th>Departure</th>
@@ -45,7 +47,7 @@
           <th>Type</th>
         </tr>
       </thead>
-      <tbody id="routesBody"></tbody>
+      <tbody></tbody>
     </table>
   </main>
 
@@ -54,24 +56,61 @@
 <!-- ROUTES DATA -->
 <script src="orbital-routes.js"></script>
 
+<!-- TABLE UTILS -->
 <script>
-  const body = document.getElementById("routesBody");
-
-  routes.forEach(route => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${route.dep}</td>
-      <td>${route.arr}</td>
-      <td>${route.duration}</td>
-      <td>${route.grade}</td>
-      <td>${route.aircraft}</td>
-      <td>${route.livery}</td>
-      <td>${route.type}</td>
-    `;
-    body.appendChild(tr);
+function addTableSearch(inputId, tableId) {
+  const input = document.getElementById(inputId);
+  const table = document.getElementById(tableId);
+  input.addEventListener("keyup", () => {
+    const filter = input.value.toLowerCase();
+    Array.from(table.tBodies[0].rows).forEach(tr => {
+      tr.style.display = Array.from(tr.cells).some(td =>
+        td.textContent.toLowerCase().includes(filter)
+      ) ? "" : "none";
+    });
   });
+}
+
+function addTableSort(tableId) {
+  const table = document.getElementById(tableId);
+  Array.from(table.tHead.rows[0].cells).forEach((th, index) => {
+    th.style.cursor = "pointer";
+    th.addEventListener("click", () => {
+      const tbody = table.tBodies[0];
+      const rows = Array.from(tbody.rows);
+      const asc = th.asc = !th.asc;
+      rows.sort((a, b) => {
+        const valA = a.cells[index].textContent.trim();
+        const valB = b.cells[index].textContent.trim();
+        if (!isNaN(valA) && !isNaN(valB)) return asc ? valA - valB : valB - valA;
+        return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      });
+      rows.forEach(r => tbody.appendChild(r));
+    });
+  });
+}
+
+// Populate table
+const tbody = document.querySelector("#routesTable tbody");
+routes.forEach(r => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${r.dep}</td>
+    <td>${r.arr}</td>
+    <td>${r.duration}</td>
+    <td>${r.grade}</td>
+    <td>${r.aircraft}</td>
+    <td>${r.livery}</td>
+    <td>${r.type}</td>
+  `;
+  tbody.appendChild(tr);
+});
+
+addTableSearch("searchRoutes", "routesTable");
+addTableSort("routesTable");
 </script>
 
 </body>
 </html>
+
 
