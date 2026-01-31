@@ -1,1 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Orbital – Available Routes</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" href="../../favicon.ico">
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Style -->
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <h2>ORBITAL</h2>
+    <a href="../../home.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+    <a href="../../submit-pirep.html"><i class="fas fa-plane-departure"></i> Submit PIREP</a>
+    <a href="orbital-events.html"><i class="fas fa-calendar-alt"></i> VA Events</a>
+    <a href="orbital-routes.html"><i class="fas fa-route"></i> Available Routes</a>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+    <h1><i class="fas fa-route"></i> Orbital Routes</h1>
+    <p class="muted">All available flights for your Virtual Airline</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Departure</th>
+          <th>Destination</th>
+          <th>Duration</th>
+          <th>Grade Req.</th>
+          <th>Aircraft</th>
+          <th>Livery</th>
+          <th>Type</th>
+        </tr>
+      </thead>
+      <tbody id="routesBody"></tbody>
+    </table>
+  </main>
+
+</div>
+
+<!-- ROUTES DATA -->
+<script src="orbital-routes.js"></script>
+
+<script>
+  const body = document.getElementById("routesBody");
+
+  routes.forEach(route => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${route.dep}</td>
+      <td>${route.arr}</td>
+      <td>${route.duration}</td>
+      <td>${route.grade}</td>
+      <td>${route.aircraft}</td>
+      <td>${route.livery}</td>
+      <td>${route.type}</td>
+    `;
+    body.appendChild(tr);
+  });
+</script>
+
+</body>
+</html>
 
