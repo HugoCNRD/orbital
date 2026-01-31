@@ -1,1 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Orbital – Sign In</title>
+<link rel="icon" href="favicon.ico">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body class="auth-page">
+
+<div class="auth-box">
+  <h1><i class="fas fa-satellite"></i> ORBITAL</h1>
+
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+
+  <p>Don't have an account yet?
+    <span onclick="openSignup()">Sign up!</span>
+  </p>
+</div>
+
+<div id="signupModal" class="modal">
+  <div class="modal-content">
+    <h2>Create Account</h2>
+
+    <input id="ifc" placeholder="IFC Username">
+    <input id="callsign" placeholder="VA Callsign">
+    <select id="va">
+      <option value="orbital">Orbital</option>
+      <option value="testva">Test VA</option>
+    </select>
+    <input id="signupEmail" placeholder="Email">
+    <input id="signupPassword" type="password" placeholder="Password">
+
+    <button onclick="signup()">Create Account</button>
+  </div>
+</div>
+
+<script type="module" src="js/auth.js"></script>
+</body>
+</html>
 
