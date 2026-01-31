@@ -20,8 +20,7 @@ const events = [
     type: "Long Haul Event",
     airports: "KSFO → PHNL",
     datetime: "2026-04-22 20:00 UTC"
-  }
-];
+  },
   {
     name: "Anniversary Day",
     type: "Fly in/out",
