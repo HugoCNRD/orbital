@@ -30,8 +30,10 @@
 
   <!-- MAIN -->
   <main class="main">
-
     <h1><i class="fas fa-plane"></i> Submit New PIREP</h1>
+
+    <!-- Search -->
+    <input type="text" id="searchRoutes" placeholder="Search routes..." class="search-input">
 
     <!-- ROUTES TABLE -->
     <table id="routesTable">
@@ -40,7 +42,7 @@
           <th>Departure</th>
           <th>Destination</th>
           <th>Duration</th>
-          <th>Grade</th>
+          <th>Grade Req.</th>
           <th>Aircraft</th>
           <th>Livery</th>
           <th>Type</th>
@@ -53,7 +55,7 @@
     <textarea id="notes" placeholder="Notes (optional)"></textarea>
 
     <!-- SUBMIT -->
-    <button class="primary" onclick="submitPirep()">
+    <button class="primary" id="submitPirep">
       <i class="fas fa-paper-plane"></i> Submit PIREP
     </button>
 
@@ -63,72 +65,115 @@
 <!-- ROUTES DATA -->
 <script src="va/orbital/orbital-routes.js"></script>
 
-<!-- FIREBASE LOGIC -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-  import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-  import { getFirestore, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
-    authDomain: "orbital---va-manager.firebaseapp.com",
-    projectId: "orbital---va-manager",
-    storageBucket: "orbital---va-manager.firebasestorage.app",
-    messagingSenderId: "162057702983",
-    appId: "1:162057702983:web:f8ed3f5d115c7c53cbeb62"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  let selectedRoute = null;
-  const tbody = document.querySelector("#routesTable tbody");
-
-  /* =========================
-     BUILD ROUTES TABLE
-  ========================= */
-  routes.forEach(route => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${route.dep}</td>
-      <td>${route.arr}</td>
-      <td>${route.duration}</td>
-      <td>${route.grade}</td>
-      <td>${route.aircraft}</td>
-      <td>${route.livery}</td>
-      <td>${route.type}</td>
-    `;
-
-    tr.onclick = () => {
-      document.querySelectorAll("tbody tr").forEach(r => r.classList.remove("selected"));
-      tr.classList.add("selected");
-      selectedRoute = route;
-    };
-
-    tbody.appendChild(tr);
-  });
-
-  /* =========================
-     SUBMIT PIREP
-  ========================= */
-  window.submitPirep = () => {
-    if (!selectedRoute) {
-      alert("Please select a route");
-      return;
+<!-- TABLE UTILS -->
+<script>
+/* =======================================
+   Table Search & Sort Utility
+======================================= */
+function addTableSearch(inputId, tableId) {
+  const input = document.getElementById(inputId);
+  const table = document.getElementById(tableId);
+  input.addEventListener("keyup", () => {
+    const filter = input.value.toLowerCase();
+    const trs = table.tBodies[0].getElementsByTagName("tr");
+    for (let tr of trs) {
+      tr.style.display = Array.from(tr.cells).some(td =>
+        td.textContent.toLowerCase().includes(filter)
+      ) ? "" : "none";
     }
+  });
+}
 
-    onAuthStateChanged(auth, async user => {
-      if (!user) return;
-
-      await updateDoc(doc(db, "users", user.uid), {
-        pireps: increment(1)
+function addTableSort(tableId) {
+  const table = document.getElementById(tableId);
+  const headers = table.tHead.rows[0].cells;
+  Array.from(headers).forEach((th, index) => {
+    th.style.cursor = "pointer";
+    th.addEventListener("click", () => {
+      const tbody = table.tBodies[0];
+      const rows = Array.from(tbody.rows);
+      const asc = th.asc = !th.asc;
+      rows.sort((a, b) => {
+        const valA = a.cells[index].textContent.trim();
+        const valB = b.cells[index].textContent.trim();
+        if (!isNaN(valA) && !isNaN(valB)) return asc ? valA - valB : valB - valA;
+        return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
       });
-
-      alert("PIREP successfully submitted!");
-      window.location.href = "home.html";
+      rows.forEach(r => tbody.appendChild(r));
     });
+  });
+}
+</script>
+
+<!-- FIREBASE + PIREP LOGIC -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
+  authDomain: "orbital---va-manager.firebaseapp.com",
+  projectId: "orbital---va-manager",
+  storageBucket: "orbital---va-manager.firebasestorage.app",
+  messagingSenderId: "162057702983",
+  appId: "1:162057702983:web:f8ed3f5d115c7c53cbeb62"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+let selectedRoute = null;
+const tbody = document.querySelector("#routesTable tbody");
+
+// Build routes table
+routes.forEach(route => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${route.dep}</td>
+    <td>${route.arr}</td>
+    <td>${route.duration}</td>
+    <td>${route.grade}</td>
+    <td>${route.aircraft}</td>
+    <td>${route.livery}</td>
+    <td>${route.type}</td>
+  `;
+  tr.onclick = () => {
+    document.querySelectorAll("tbody tr").forEach(r => r.classList.remove("selected"));
+    tr.classList.add("selected");
+    selectedRoute = route;
   };
+  tbody.appendChild(tr);
+});
+
+// Init search & sort
+addTableSearch("searchRoutes", "routesTable");
+addTableSort("routesTable");
+
+// Submit PIREP
+document.getElementById("submitPirep").addEventListener("click", () => {
+  if (!selectedRoute) {
+    alert("Please select a route");
+    return;
+  }
+
+  onAuthStateChanged(auth, async user => {
+    if (!user) return;
+
+    const userRef = doc(db, "users", user.uid);
+    await updateDoc(userRef, {
+      pireps: increment(1)
+    });
+
+    alert("Your flight has been recorded!");
+
+    // Clear selection
+    document.querySelectorAll("tbody tr").forEach(r => r.classList.remove("selected"));
+    selectedRoute = null;
+    document.getElementById("notes").value = "";
+  });
+});
 </script>
 
 </body>
