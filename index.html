@@ -7,14 +7,16 @@
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
 
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
 <body class="auth-page">
 
 <div class="auth-box">
-  <h1><i class="fas fa-satellite"></i> ORBITAL</h1>
+  <h1><i class="fas fa-satellite-dish"></i> ORBITAL</h1>
 
-  <!-- LOGIN BOX -->
+  <!-- LOGIN -->
   <input type="email" id="loginEmail" placeholder="Email address">
   <input type="password" id="loginPassword" placeholder="Password">
   <button onclick="login()"><i class="fas fa-sign-in-alt"></i> Login</button>
@@ -29,91 +31,85 @@
 
     <input type="text" id="ifcUsername" placeholder="IFC Username">
     <input type="text" id="vaCallsign" placeholder="VA Callsign">
-    <input type="email" id="signupEmail" placeholder="Email address">
-    <input type="password" id="signupPassword" placeholder="Password">
-
     <select id="vaSelect">
       <option value="">Select Virtual Airline</option>
       <option value="orbital">Orbital</option>
       <option value="testva">Test VA</option>
     </select>
+    <input type="email" id="signupEmail" placeholder="Email address">
+    <input type="password" id="signupPassword" placeholder="Password">
 
     <button onclick="signup()"><i class="fas fa-user-check"></i> Create Account</button>
     <button class="primary" style="margin-top:15px;background:#222" onclick="closeSignup()">Cancel</button>
   </div>
 </div>
 
-<!-- FIREBASE LOGIC -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* =========================
-   FIREBASE CONFIG
-========================= */
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
   authDomain: "orbital---va-manager.firebaseapp.com",
   projectId: "orbital---va-manager",
   storageBucket: "orbital---va-manager.firebasestorage.app",
   messagingSenderId: "162057702983",
-  appId: "1:162057702983:web:f8ed3f5d115c7c53cbeb62"
+  appId: "1:162057702983:web:f8ed3f5d115c7c53cbeb62",
+  measurementId: "G-K1CGXQ83SE"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-/* =========================
-   LOGIN
-========================= */
+// LOGIN
 window.login = () => {
-  signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value)
+  signInWithEmailAndPassword(auth, document.getElementById("loginEmail").value, document.getElementById("loginPassword").value)
     .then(() => window.location.href = "home.html")
     .catch(err => alert(err.message));
 };
 
-/* =========================
-   SIGNUP
-========================= */
+// SIGNUP
 window.signup = async () => {
-  if (!vaSelect.value) {
+  if (!document.getElementById("vaSelect").value) {
     alert("Please select a Virtual Airline");
     return;
   }
 
   try {
-    const userCred = await createUserWithEmailAndPassword(auth, signupEmail.value, signupPassword.value);
+    const userCred = await createUserWithEmailAndPassword(
+      auth,
+      document.getElementById("signupEmail").value,
+      document.getElementById("signupPassword").value
+    );
 
     await setDoc(doc(db, "users", userCred.user.uid), {
-      ifcUsername: ifcUsername.value,
-      callsign: vaCallsign.value,
-      va: vaSelect.value,
+      ifcUsername: document.getElementById("ifcUsername").value,
+      callsign: document.getElementById("vaCallsign").value,
+      va: document.getElementById("vaSelect").value,
       pireps: 0,
       grade: "FO",
       role: "pilot"
     });
 
     alert("Your account has been created! Enter your information to login.");
-    signupModal.style.display = "none";
-    signupEmail.value = signupPassword.value = ifcUsername.value = vaCallsign.value = "";
-    vaSelect.value = "";
-
+    closeSignup();
   } catch (err) {
+    console.error(err);
     alert("Error creating account: " + err.message);
   }
 };
 
-/* =========================
-   MODAL CONTROL
-========================= */
-window.openSignup = () => signupModal.style.display = "block";
-window.closeSignup = () => signupModal.style.display = "none";
+// MODAL
+window.openSignup = () => { document.getElementById("signupModal").style.display = "block"; };
+window.closeSignup = () => { document.getElementById("signupModal").style.display = "none"; };
 </script>
 
 </body>
 </html>
+
 
 
 
