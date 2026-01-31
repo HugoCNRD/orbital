@@ -1,41 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Orbital – Pilots List</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Orbital VA – Pilots List</title>
+<link rel="icon" href="favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="icon" href="../../favicon.ico">
-
-  <!-- Fonts & Icons -->
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-
-  <link rel="stylesheet" href="../../css/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
 
 <div class="app">
-
-  <!-- SIDEBAR -->
   <nav class="sidebar">
-    <h2>ORBITAL</h2>
-    <a href="../../va-manager.html"><i class="fas fa-gauge"></i> Dashboard</a>
-    <a href="../../create-event.html"><i class="fas fa-calendar-plus"></i> New Event</a>
+    <h2>ORBITAL VA</h2>
+    <a href="orbital-va-manager.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+    <a href="create-event.html"><i class="fas fa-calendar-plus"></i> New Event</a>
     <a href="orbital-routes.html"><i class="fas fa-route"></i> VA Routes</a>
     <a href="orbital-events.html"><i class="fas fa-calendar-alt"></i> VA Events</a>
-    <a href="orbital-pilots.html"><i class="fas fa-users"></i> Pilots List</a>
+    <a href="orbital-va-pilots.html"><i class="fas fa-users"></i> Pilots List</a>
   </nav>
 
-  <!-- MAIN -->
   <main class="main">
-    <h1><i class="fas fa-users"></i> Orbital Pilots</h1>
-
-    <!-- Search -->
-    <input type="text" id="searchPilots" placeholder="Search pilots..." class="search-input">
-
-    <!-- Table -->
+    <h1>Pilots List – ORBITAL VA</h1>
+    <input type="text" id="searchInput" placeholder="Search pilots..." style="margin-bottom:20px; padding:8px; width:100%; font-size:16px;">
     <table id="pilotsTable">
       <thead>
         <tr>
@@ -45,17 +34,15 @@
           <th>Number of PIREPs</th>
         </tr>
       </thead>
-      <tbody id="pilotsBody"></tbody>
+      <tbody></tbody>
     </table>
   </main>
-
 </div>
 
-<!-- FIREBASE -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
@@ -70,61 +57,45 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+let pilots = [];
+
 onAuthStateChanged(auth, async user => {
-  if (!user) location.href = "../../index.html";
+  if (!user) { window.location.href = "index.html"; return; }
 
-  const tbody = document.getElementById("pilotsBody");
-  const usersSnap = await getDocs(collection(db, "users"));
-  usersSnap.forEach(docu => {
-    const u = docu.data();
-    if (u.va === "orbital") {
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${u.ifcUsername}</td>
-        <td>${u.callsign}</td>
-        <td>${u.grade || "FO"}</td>
-        <td>${u.pireps || 0}</td>
-      `;
-      tbody.appendChild(tr);
-    }
-  });
+  const userSnap = await getDocs(query(collection(db, "users"), where("uid", "==", user.uid)));
+  const userData = userSnap.docs[0]?.data();
 
-  addTableSearch("searchPilots", "pilotsTable");
-  addTableSort("pilotsTable");
+  if (userData?.role !== "manager") {
+    alert("Access denied. You are not a VA manager.");
+    window.location.href = "home.html";
+    return;
+  }
+
+  const pilotsSnap = await getDocs(query(collection(db, "users"), where("va", "==", "orbital")));
+  pilots = pilotsSnap.docs.map(doc => doc.data());
+  renderTable();
 });
 
-// TABLE UTILS
-function addTableSearch(inputId, tableId) {
-  const input = document.getElementById(inputId);
-  const table = document.getElementById(tableId);
-  input.addEventListener("keyup", () => {
-    const filter = input.value.toLowerCase();
-    Array.from(table.tBodies[0].rows).forEach(tr => {
-      tr.style.display = Array.from(tr.cells).some(td =>
-        td.textContent.toLowerCase().includes(filter)
-      ) ? "" : "none";
-    });
+// Render table
+function renderTable() {
+  const tbody = document.querySelector("#pilotsTable tbody");
+  tbody.innerHTML = "";
+  pilots.forEach(p => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${p.ifcUsername}</td><td>${p.callsign}</td><td>${p.grade}</td><td>${p.pireps}</td>`;
+    tbody.appendChild(tr);
   });
 }
 
-function addTableSort(tableId) {
-  const table = document.getElementById(tableId);
-  Array.from(table.tHead.rows[0].cells).forEach((th, index) => {
-    th.style.cursor = "pointer";
-    th.addEventListener("click", () => {
-      const tbody = table.tBodies[0];
-      const rows = Array.from(tbody.rows);
-      const asc = th.asc = !th.asc;
-      rows.sort((a, b) => {
-        const valA = a.cells[index].textContent.trim();
-        const valB = b.cells[index].textContent.trim();
-        if (!isNaN(valA) && !isNaN(valB)) return asc ? valA - valB : valB - valA;
-        return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-      });
-      rows.forEach(r => tbody.appendChild(r));
-    });
+// Search
+document.getElementById("searchInput").addEventListener("input", function() {
+  const filter = this.value.toLowerCase();
+  const tbody = document.querySelector("#pilotsTable tbody");
+  Array.from(tbody.children).forEach(tr => {
+    const rowText = tr.innerText.toLowerCase();
+    tr.style.display = rowText.includes(filter) ? "" : "none";
   });
-}
+});
 </script>
 
 </body>
