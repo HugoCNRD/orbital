@@ -22,4 +22,11 @@ const events = [
     datetime: "2026-04-22 20:00 UTC"
   }
 ];
+  {
+    name: "Anniversary Day",
+    type: "Fly in/out",
+    airports: "KLFPG",
+    datetime: "2026-12-01 06:00 UTC → 23:00 UTC "
+  }
+];
 
