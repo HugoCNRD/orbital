@@ -4,111 +4,140 @@
 <meta charset="UTF-8">
 <title>Orbital – Sign In</title>
 <link rel="icon" href="favicon.ico">
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Fonts -->
+<!-- Fonts & Icons -->
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<!-- Global Style -->
+<link rel="stylesheet" href="css/style.css">
 </head>
+
 <body class="auth-page">
 
 <div class="auth-box">
-  <h1><i class="fas fa-satellite-dish"></i> ORBITAL</h1>
+  <h1><i class="fas fa-satellite"></i> ORBITAL</h1>
 
-  <!-- LOGIN -->
   <input type="email" id="loginEmail" placeholder="Email address">
   <input type="password" id="loginPassword" placeholder="Password">
-  <button onclick="login()"><i class="fas fa-sign-in-alt"></i> Login</button>
 
-  <p>Don't have an account yet? <span onclick="openSignup()">Sign up!</span></p>
+  <button onclick="login()">
+    <i class="fas fa-sign-in-alt"></i> Login
+  </button>
+
+  <p>
+    Don't have an account yet?
+    <span onclick="openSignup()">Sign up!</span>
+  </p>
 </div>
 
 <!-- SIGNUP MODAL -->
 <div id="signupModal" class="modal">
   <div class="modal-content">
     <h2><i class="fas fa-user-plus"></i> Create Account</h2>
-
     <input type="text" id="ifcUsername" placeholder="IFC Username">
     <input type="text" id="vaCallsign" placeholder="VA Callsign">
+    <input type="email" id="signupEmail" placeholder="Email address">
+    <input type="password" id="signupPassword" placeholder="Password">
     <select id="vaSelect">
       <option value="">Select Virtual Airline</option>
       <option value="orbital">Orbital</option>
       <option value="testva">Test VA</option>
     </select>
-    <input type="email" id="signupEmail" placeholder="Email address">
-    <input type="password" id="signupPassword" placeholder="Password">
-
     <button onclick="signup()"><i class="fas fa-user-check"></i> Create Account</button>
-    <button class="primary" style="margin-top:15px;background:#222" onclick="closeSignup()">Cancel</button>
+    <button style="margin-top:15px;background:#222;color:white;" onclick="closeSignup()">Cancel</button>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } 
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } 
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase config
+/* =========================
+   FIREBASE CONFIG
+========================= */
 const firebaseConfig = {
   apiKey: "AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
   authDomain: "orbital---va-manager.firebaseapp.com",
   projectId: "orbital---va-manager",
   storageBucket: "orbital---va-manager.firebasestorage.app",
   messagingSenderId: "162057702983",
-  appId: "1:162057702983:web:f8ed3f5d115c7c53cbeb62",
-  measurementId: "G-K1CGXQ83SE"
+  appId: "1:162057702983:web:f8ed3f5d115c7c53cbeb62"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// LOGIN
-window.login = () => {
-  signInWithEmailAndPassword(auth, document.getElementById("loginEmail").value, document.getElementById("loginPassword").value)
-    .then(() => window.location.href = "home.html")
-    .catch(err => alert(err.message));
+/* =========================
+   LOGIN
+========================= */
+window.login = async () => {
+  try {
+    const userCred = await signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value);
+    const uid = userCred.user.uid;
+
+    // Récupérer le rôle dans Firestore
+    const userSnap = await getDoc(doc(db, "users", uid));
+    const userData = userSnap.data();
+
+    if (!userData) {
+      alert("User data not found. Please contact support.");
+      return;
+    }
+
+    if (userData.role === "manager") {
+      // Redirige vers dashboard manager
+      window.location.href = "orbital-va-manager.html";
+    } else {
+      // Redirige vers dashboard pilote
+      window.location.href = "home.html";
+    }
+  } catch (err) {
+    alert(err.message);
+  }
 };
 
-// SIGNUP
+/* =========================
+   SIGNUP
+========================= */
 window.signup = async () => {
-  if (!document.getElementById("vaSelect").value) {
-    alert("Please select a Virtual Airline");
-    return;
-  }
+  if (!vaSelect.value) { alert("Please select a Virtual Airline"); return; }
 
   try {
-    const userCred = await createUserWithEmailAndPassword(
-      auth,
-      document.getElementById("signupEmail").value,
-      document.getElementById("signupPassword").value
-    );
+    const userCred = await createUserWithEmailAndPassword(auth, signupEmail.value, signupPassword.value);
 
     await setDoc(doc(db, "users", userCred.user.uid), {
-      ifcUsername: document.getElementById("ifcUsername").value,
-      callsign: document.getElementById("vaCallsign").value,
-      va: document.getElementById("vaSelect").value,
+      ifcUsername: ifcUsername.value,
+      callsign: vaCallsign.value,
+      va: vaSelect.value,
       pireps: 0,
       grade: "FO",
-      role: "pilot"
+      role: "pilot" // par défaut tous les nouveaux comptes sont pilotes
     });
 
     alert("Your account has been created! Enter your information to login.");
     closeSignup();
+
   } catch (err) {
-    console.error(err);
-    alert("Error creating account: " + err.message);
+    alert(err.message);
   }
 };
 
-// MODAL
-window.openSignup = () => { document.getElementById("signupModal").style.display = "block"; };
-window.closeSignup = () => { document.getElementById("signupModal").style.display = "none"; };
+/* =========================
+   MODAL CONTROL
+========================= */
+window.openSignup = () => signupModal.style.display = "block";
+window.closeSignup = () => signupModal.style.display = "none";
 </script>
 
 </body>
 </html>
+
 
 
 
