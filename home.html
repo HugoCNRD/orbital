@@ -33,6 +33,13 @@
       <div class="card">Callsign <span id="callsign"></span></div>
       <div class="card">Virtual Airline <span id="va"></span></div>
       <div class="card">Number of Flights <span id="pireps"></span></div>
+      <!-- NEW CASES -->
+      <div class="card">Grade <span id="grade">N/A</span></div>
+      <div class="card">XP <span id="xp">N/A</span></div>
+      <div class="card">ATC Rank <span id="atcrank">N/A</span></div>
+      <div class="card">Violations <span id="violations">N/A</span></div>
+      <div class="card">Online Flights <span id="onlineFlights">N/A</span></div>
+      <div class="card">Flight Count <span id="flightCount">N/A</span></div>
     </div>
 
     <button class="primary" onclick="location.href='submit-pirep.html'">
@@ -59,6 +66,9 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
+// YOUR Infinite Flight API key here
+const IF_API_KEY = "YOUR_IF_API_KEY_HERE";
+
 onAuthStateChanged(auth, async user => {
   if (!user) {
     window.location.href = "index.html";
@@ -68,16 +78,50 @@ onAuthStateChanged(auth, async user => {
   const snap = await getDoc(doc(db, "users", user.uid));
   const data = snap.data();
 
-  document.getElementById("pilotName").innerText = data?.ifcUsername || "Pilot";
+  const ifcUsername = data?.ifcUsername || "Pilot";
+
+  document.getElementById("pilotName").innerText = ifcUsername;
   document.getElementById("ifc").innerText = data?.ifcUsername || "-";
   document.getElementById("callsign").innerText = data?.callsign || "-";
   document.getElementById("va").innerText = data?.va?.toUpperCase() || "-";
   document.getElementById("pireps").innerText = data?.pireps || 0;
+
+  // Fetch Infinite Flight stats
+  try {
+    const response = await fetch("https://api.infiniteflight.com/public/v2/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${IF_API_KEY}`
+      },
+      body: JSON.stringify({ discourseNames: [ifcUsername] })
+    });
+
+    const result = await response.json();
+    const stats = result[0] || {};
+
+    document.getElementById("grade").innerText = stats.grade ?? "N/A";
+    document.getElementById("xp").innerText = stats.xp ?? "N/A";
+    document.getElementById("atcrank").innerText = stats.atcRank ?? "N/A";
+    document.getElementById("violations").innerText = stats.violations ?? "N/A";
+    document.getElementById("onlineFlights").innerText = stats.onlineFlights ?? "N/A";
+    document.getElementById("flightCount").innerText = stats.flightTime ? Math.floor(stats.flightTime / 60) : "N/A";
+
+  } catch(err) {
+    console.error("IF API error:", err);
+    document.getElementById("grade").innerText = "N/A";
+    document.getElementById("xp").innerText = "N/A";
+    document.getElementById("atcrank").innerText = "N/A";
+    document.getElementById("violations").innerText = "N/A";
+    document.getElementById("onlineFlights").innerText = "N/A";
+    document.getElementById("flightCount").innerText = "N/A";
+  }
 });
 </script>
 
 </body>
 </html>
+
 
 
 
