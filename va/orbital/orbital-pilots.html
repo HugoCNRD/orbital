@@ -32,19 +32,23 @@
     <h1>Pilots List – ORBITAL VA</h1>
     <p class="muted">Manage all pilots associated with your airline.</p>
 
+    <!-- Search -->
     <input type="text" id="searchInput" placeholder="Search pilots..." class="search-box">
 
-    <table id="pilotsTable">
-      <thead>
-        <tr>
-          <th>IFC Username</th>
-          <th>Callsign</th>
-          <th>Grade</th>
-          <th>Number of PIREPs</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <!-- Table card -->
+    <div class="card">
+      <table id="pilotsTable">
+        <thead>
+          <tr>
+            <th>IFC Username</th>
+            <th>Callsign</th>
+            <th>Grade</th>
+            <th>Number of PIREPs</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </main>
 
 </div>
@@ -72,10 +76,9 @@ let pilots = [];
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href = "index.html"; return; }
 
-  // Vérifier que c'est un manager
+  // Vérifier rôle manager
   const managerSnap = await getDoc(doc(db, "users", user.uid));
   const managerData = managerSnap.data();
-
   if (!managerData || managerData.role !== "manager") {
     alert("Access denied. You are not a VA manager.");
     window.location.href = "home.html";
@@ -118,6 +121,7 @@ document.getElementById("searchInput").addEventListener("input", function() {
 
 </body>
 </html>
+
 
 
 
