@@ -1,1 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Orbital – Your PIREPs</title>
+<link rel="icon" href="favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Fonts & Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<!-- Inline style (copié depuis style.css pour que tout fonctionne) -->
+<style>
+/* ======= Style complet inline ======= */
+/* Ici tu mets exactement le contenu de style.css que tu avais copié pour le dashboard, pour ne plus dépendre du fichier externe */
+</style>
+
+</head>
+<body>
+
+<div class="app">
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <h2>ORBITAL</h2>
+    <a href="home.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+    <a href="submit-pirep.html"><i class="fas fa-plane-departure"></i> Submit PIREP</a>
+    <a href="va/orbital/orbital-events.html"><i class="fas fa-calendar-alt"></i> VA Events</a>
+    <a href="va/orbital/orbital-routes.html"><i class="fas fa-route"></i> Available Routes</a>
+    <a href="pireps-user.html"><i class="fas fa-list-alt"></i> Your PIREPs</a>
+    <a href="airport-info.html"><i class="fas fa-map-marker-alt"></i> Airport Info</a>
+    <a href="ranks-user.html"><i class="fas fa-star"></i> Ranks</a>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main">
+    <h1>Your PIREPs</h1>
+    <p class="muted">All flights you have submitted</p>
+
+    <table id="pirepsTable">
+      <thead>
+        <tr>
+          <th>Flight #</th>
+          <th>Departure</th>
+          <th>Destination</th>
+          <th>Aircraft</th>
+          <th>Livery</th>
+          <th>Type</th>
+          <th>Duration</th>
+          <th>Notes</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
+  authDomain: "orbital---va-manager.firebaseapp.com",
+  projectId: "orbital---va-manager",
+  storageBucket: "orbital---va-manager.firebasestorage.app",
+  messagingSenderId: "162057702983",
+  appId: "1:162057702983:web:f8ed3f5d115c7c53cbeb62"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  // Query tous les PIREPs pour l'utilisateur connecté
+  const pirepsSnap = await getDocs(query(collection(db, "pireps"), where("userId", "==", user.uid)));
+  const pireps = pirepsSnap.docs.map(doc => doc.data());
+
+  const tbody = document.querySelector("#pirepsTable tbody");
+  if (pireps.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8">No PIREPs found</td></tr>`;
+    return;
+  }
+
+  pireps.forEach((p, idx) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${idx+1}</td>
+      <td>${p.departure || "-"}</td>
+      <td>${p.destination || "-"}</td>
+      <td>${p.aircraft || "-"}</td>
+      <td>${p.livery || "-"}</td>
+      <td>${p.type || "-"}</td>
+      <td>${p.duration || "-"}</td>
+      <td>${p.notes || "-"}</td>
+    `;
+    tbody.appendChild(row);
+  });
+});
+</script>
+
+</body>
+</html>
 
