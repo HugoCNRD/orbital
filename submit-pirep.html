@@ -6,15 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <link rel="icon" href="favicon.ico">
-
-  <!-- Fonts & Icons -->
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-
-  <!-- Style -->
   <link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
 
 <div class="app">
@@ -30,86 +25,53 @@
 
   <!-- MAIN -->
   <main class="main">
-    <h1><i class="fas fa-plane"></i> Submit New PIREP</h1>
 
-    <!-- Search -->
-    <input type="text" id="searchRoutes" placeholder="Search routes..." class="search-input">
+    <h1>Submit New Flight</h1>
 
-    <!-- ROUTES TABLE -->
-    <table id="routesTable">
+    <!-- SEARCH -->
+    <input type="text" id="searchFlights" placeholder="Search flights..." class="search-input">
+
+    <!-- FLIGHTS TABLE -->
+    <table id="flightsTable">
       <thead>
         <tr>
           <th>Departure</th>
           <th>Destination</th>
           <th>Duration</th>
-          <th>Grade Req.</th>
+          <th>Grade Requirement</th>
           <th>Aircraft</th>
           <th>Livery</th>
           <th>Type</th>
         </tr>
       </thead>
-      <tbody></tbody>
+      <tbody>
+        <!-- Exemple de vols -->
+        <tr>
+          <td>JFK</td><td>LAX</td><td>6h</td><td>FO</td><td>B738</td><td>Orbital</td><td>Passenger</td>
+        </tr>
+        <tr>
+          <td>LHR</td><td>CDG</td><td>1h30</td><td>FO</td><td>A320</td><td>Orbital</td><td>Passenger</td>
+        </tr>
+        <tr>
+          <td>SFO</td><td>SEA</td><td>2h</td><td>FO</td><td>B738</td><td>Orbital</td><td>Cargo</td>
+        </tr>
+      </tbody>
     </table>
 
     <!-- NOTES -->
-    <textarea id="notes" placeholder="Notes (optional)"></textarea>
+    <textarea id="notes" placeholder="Optional notes..." rows="4" style="width:100%; margin-top:15px;"></textarea>
 
-    <!-- SUBMIT -->
-    <button class="primary" id="submitPirep">
+    <button class="primary" style="margin-top:15px;" onclick="submitPirep()">
       <i class="fas fa-paper-plane"></i> Submit PIREP
     </button>
 
   </main>
 </div>
 
-<!-- ROUTES DATA -->
-<script src="va/orbital/orbital-routes.js"></script>
-
-<!-- TABLE UTILS -->
-<script>
-/* =======================================
-   Table Search & Sort Utility
-======================================= */
-function addTableSearch(inputId, tableId) {
-  const input = document.getElementById(inputId);
-  const table = document.getElementById(tableId);
-  input.addEventListener("keyup", () => {
-    const filter = input.value.toLowerCase();
-    const trs = table.tBodies[0].getElementsByTagName("tr");
-    for (let tr of trs) {
-      tr.style.display = Array.from(tr.cells).some(td =>
-        td.textContent.toLowerCase().includes(filter)
-      ) ? "" : "none";
-    }
-  });
-}
-
-function addTableSort(tableId) {
-  const table = document.getElementById(tableId);
-  const headers = table.tHead.rows[0].cells;
-  Array.from(headers).forEach((th, index) => {
-    th.style.cursor = "pointer";
-    th.addEventListener("click", () => {
-      const tbody = table.tBodies[0];
-      const rows = Array.from(tbody.rows);
-      const asc = th.asc = !th.asc;
-      rows.sort((a, b) => {
-        const valA = a.cells[index].textContent.trim();
-        const valB = b.cells[index].textContent.trim();
-        if (!isNaN(valA) && !isNaN(valB)) return asc ? valA - valB : valB - valA;
-        return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-      });
-      rows.forEach(r => tbody.appendChild(r));
-    });
-  });
-}
-</script>
-
-<!-- FIREBASE + PIREP LOGIC -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
@@ -124,58 +86,88 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-let selectedRoute = null;
-const tbody = document.querySelector("#routesTable tbody");
-
-// Build routes table
-routes.forEach(route => {
-  const tr = document.createElement("tr");
-  tr.innerHTML = `
-    <td>${route.dep}</td>
-    <td>${route.arr}</td>
-    <td>${route.duration}</td>
-    <td>${route.grade}</td>
-    <td>${route.aircraft}</td>
-    <td>${route.livery}</td>
-    <td>${route.type}</td>
-  `;
-  tr.onclick = () => {
-    document.querySelectorAll("tbody tr").forEach(r => r.classList.remove("selected"));
-    tr.classList.add("selected");
-    selectedRoute = route;
-  };
-  tbody.appendChild(tr);
+let currentUser = null;
+onAuthStateChanged(auth, user => {
+  if (!user) window.location.href = "index.html";
+  else currentUser = user;
 });
 
-// Init search & sort
-addTableSearch("searchRoutes", "routesTable");
-addTableSort("routesTable");
+// ===== SELECT FLIGHT ROW =====
+const flightsTable = document.getElementById("flightsTable").tBodies[0];
+let selectedRow = null;
 
-// Submit PIREP
-document.getElementById("submitPirep").addEventListener("click", () => {
-  if (!selectedRoute) {
-    alert("Please select a route");
-    return;
-  }
+Array.from(flightsTable.rows).forEach(row => {
+  row.addEventListener("click", () => {
+    if (selectedRow) selectedRow.classList.remove("selected");
+    row.classList.add("selected");
+    selectedRow = row;
+  });
+});
 
-  onAuthStateChanged(auth, async user => {
-    if (!user) return;
+// ===== SUBMIT PIREP =====
+window.submitPirep = async () => {
+  if (!selectedRow) { alert("Please select a flight"); return; }
 
-    const userRef = doc(db, "users", user.uid);
-    await updateDoc(userRef, {
-      pireps: increment(1)
-    });
+  const flight = {
+    departure: selectedRow.cells[0].innerText,
+    destination: selectedRow.cells[1].innerText,
+    duration: selectedRow.cells[2].innerText,
+    grade: selectedRow.cells[3].innerText,
+    aircraft: selectedRow.cells[4].innerText,
+    livery: selectedRow.cells[5].innerText,
+    type: selectedRow.cells[6].innerText,
+    notes: document.getElementById("notes").value
+  };
+
+  try {
+    const userRef = doc(db, "users", currentUser.uid);
+    await updateDoc(userRef, { pireps: increment(1) });
 
     alert("Your flight has been recorded!");
-
-    // Clear selection
-    document.querySelectorAll("tbody tr").forEach(r => r.classList.remove("selected"));
-    selectedRoute = null;
+    selectedRow.classList.remove("selected");
+    selectedRow = null;
     document.getElementById("notes").value = "";
+
+  } catch(err) {
+    console.error("Error submitting PIREP:", err);
+    alert("Failed to submit flight.");
+  }
+};
+
+// ===== SEARCH =====
+document.getElementById("searchFlights").addEventListener("keyup", e => {
+  const filter = e.target.value.toLowerCase();
+  Array.from(flightsTable.rows).forEach(row => {
+    row.style.display = Array.from(row.cells).some(td => td.textContent.toLowerCase().includes(filter)) ? "" : "none";
+  });
+});
+
+// ===== SORT =====
+Array.from(flightsTable.tHead.rows[0].cells).forEach((th, i) => {
+  th.style.cursor = "pointer";
+  th.addEventListener("click", () => {
+    const rows = Array.from(flightsTable.rows);
+    const asc = !th.asc;
+    th.asc = asc;
+    rows.sort((a,b) => {
+      const aText = a.cells[i].textContent.trim();
+      const bText = b.cells[i].textContent.trim();
+      if (!isNaN(aText) && !isNaN(bText)) return asc ? aText - bText : bText - aText;
+      return asc ? aText.localeCompare(bText) : bText.localeCompare(aText);
+    });
+    rows.forEach(r => flightsTable.appendChild(r));
   });
 });
 </script>
 
+<style>
+/* Ligne sélectionnée */
+.selected { background-color: #3c6fdc33; font-weight:bold; cursor:pointer; }
+#flightsTable tr:hover { background-color: #3c6fdc22; cursor:pointer; }
+.search-input { width:100%; padding:8px; margin-bottom:10px; border-radius:6px; border:1px solid #ccc; }
+</style>
+
 </body>
 </html>
+
 
