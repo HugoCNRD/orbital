@@ -7,73 +7,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Fonts & Icons -->
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
 <!-- Global Style -->
 <link rel="stylesheet" href="css/style.css">
-
-<style>
-.main {
-  padding: 40px;
-  background: #0d1117;
-  color: #fff;
-  min-height: 100vh;
-  font-family: 'Poppins', sans-serif;
-}
-.main h1 {
-  font-family: 'Orbitron', sans-serif;
-  font-size: 32px;
-  color: #6aa7ff;
-  margin-bottom: 20px;
-}
-.search-box {
-  margin-bottom: 20px;
-  padding: 10px;
-  width: 100%;
-  font-size: 16px;
-  border-radius: 8px;
-  border: 1px solid #555;
-  background: #111;
-  color: #fff;
-}
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #111;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.5);
-}
-th, td {
-  padding: 14px 12px;
-  text-align: left;
-  border-bottom: 1px solid #222;
-}
-th {
-  background: linear-gradient(90deg, #6aa7ff, #8a5eff);
-  color: #fff;
-  font-family: 'Orbitron', sans-serif;
-  text-transform: uppercase;
-}
-tr:hover {
-  background: rgba(106,167,255,0.1);
-}
-.sidebar a {
-  color: #fff;
-  font-weight: 500;
-}
-.sidebar a:hover {
-  background: #222;
-}
-.main::-webkit-scrollbar {
-  width: 8px;
-}
-.main::-webkit-scrollbar-thumb {
-  background-color: #6aa7ff;
-  border-radius: 4px;
-}
-</style>
 </head>
 <body>
 
@@ -84,14 +22,16 @@ tr:hover {
     <h2>ORBITAL VA</h2>
     <a href="orbital-va-manager.html"><i class="fas fa-chart-line"></i> Dashboard</a>
     <a href="create-event.html"><i class="fas fa-calendar-plus"></i> New Event</a>
-    <a href="orbital-routes.html"><i class="fas fa-route"></i> VA Routes</a>
-    <a href="orbital-events.html"><i class="fas fa-calendar-alt"></i> VA Events</a>
-    <a href="orbital-va-pilots.html"><i class="fas fa-users"></i> Pilots List</a>
+    <a href="va/orbital/orbital-routes.html"><i class="fas fa-route"></i> VA Routes</a>
+    <a href="va/orbital/orbital-events.html"><i class="fas fa-calendar-alt"></i> VA Events</a>
+    <a href="va/orbital/orbital-pilots.html"><i class="fas fa-users"></i> Pilots List</a>
   </nav>
 
   <!-- MAIN -->
   <main class="main">
     <h1>Pilots List – ORBITAL VA</h1>
+    <p class="muted">Manage all pilots associated with your airline.</p>
+
     <input type="text" id="searchInput" placeholder="Search pilots..." class="search-box">
 
     <table id="pilotsTable">
@@ -132,7 +72,7 @@ let pilots = [];
 onAuthStateChanged(auth, async user => {
   if (!user) { window.location.href = "index.html"; return; }
 
-  // Récupérer le manager
+  // Vérifier que c'est un manager
   const managerSnap = await getDoc(doc(db, "users", user.uid));
   const managerData = managerSnap.data();
 
@@ -149,10 +89,11 @@ onAuthStateChanged(auth, async user => {
   renderTable();
 });
 
-// RENDU TABLEAU
+// Fonction pour afficher le tableau
 function renderTable() {
   const tbody = document.querySelector("#pilotsTable tbody");
   tbody.innerHTML = "";
+
   pilots.forEach(p => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -165,19 +106,19 @@ function renderTable() {
   });
 }
 
-// RECHERCHE
+// Recherche en direct
 document.getElementById("searchInput").addEventListener("input", function() {
   const filter = this.value.toLowerCase();
   const tbody = document.querySelector("#pilotsTable tbody");
   Array.from(tbody.children).forEach(tr => {
-    const rowText = tr.innerText.toLowerCase();
-    tr.style.display = rowText.includes(filter) ? "" : "none";
+    tr.style.display = tr.innerText.toLowerCase().includes(filter) ? "" : "none";
   });
 });
 </script>
 
 </body>
 </html>
+
 
 
 
