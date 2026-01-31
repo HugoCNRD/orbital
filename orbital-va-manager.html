@@ -2,15 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<title>Orbital VA – Manager Dashboard</title>
+<link rel="icon" href="favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Orbital VA Manager</title>
-<link rel="icon" href="../../favicon.ico">
 
+<!-- Fonts & Icons -->
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-<link rel="stylesheet" href="../../css/style.css">
-</head>
 
+<!-- Global Style -->
+<link rel="stylesheet" href="css/style.css">
+</head>
 <body>
 
 <div class="app">
@@ -18,46 +20,34 @@
   <!-- SIDEBAR -->
   <nav class="sidebar">
     <h2>ORBITAL VA</h2>
-    <a href="orbital-va-manager.html"><i class="fas fa-gauge"></i> Dashboard</a>
+    <a href="orbital-va-manager.html"><i class="fas fa-chart-line"></i> Dashboard</a>
     <a href="create-event.html"><i class="fas fa-calendar-plus"></i> New Event</a>
     <a href="orbital-routes.html"><i class="fas fa-route"></i> VA Routes</a>
     <a href="orbital-events.html"><i class="fas fa-calendar-alt"></i> VA Events</a>
-    <a href="orbital-pilots.html"><i class="fas fa-users"></i> Pilots List</a>
+    <a href="orbital-va-pilots.html"><i class="fas fa-users"></i> Pilots List</a>
   </nav>
 
   <!-- MAIN -->
   <main class="main">
-    <h1><i class="fas fa-gauge"></i> Orbital VA Dashboard</h1>
+    <h1>Welcome, VA Manager</h1>
+    <p class="muted">VA Dashboard – Manage your airline</p>
 
-    <div class="va-stats">
-      <p>VA Name: <span id="vaName"></span></p>
-      <p>Number of Pilots: <span id="pilotCount"></span></p>
-      <p>Total PIREPs: <span id="totalPireps"></span></p>
+    <!-- VA STATS -->
+    <div class="stats-grid" id="vaStats">
+      <div class="card">VA Name <span id="vaName">ORBİTAL</span></div>
+      <div class="card">Number of Pilots <span id="numPilots">0</span></div>
+      <div class="card">Total PIREPs <span id="numPireps">0</span></div>
     </div>
 
-    <h2>Pilots List</h2>
-    <input type="text" id="searchPilots" placeholder="Search pilots..." class="search-input">
-
-    <table id="pilotsTable">
-      <thead>
-        <tr>
-          <th>IFC Username</th>
-          <th>Callsign</th>
-          <th>Grade</th>
-          <th>Number of PIREPs</th>
-        </tr>
-      </thead>
-      <tbody id="pilotsBody"></tbody>
-    </table>
   </main>
 </div>
 
-<!-- FIREBASE + DASHBOARD LOGIC -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
   authDomain: "orbital---va-manager.firebaseapp.com",
@@ -72,86 +62,34 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 onAuthStateChanged(auth, async user => {
-  if (!user) location.href = "../../index.html";
+  if (!user) { window.location.href = "index.html"; return; }
 
-  const userSnap = await getDoc(doc(db, "users", user.uid));
-  const data = userSnap.data();
+  // Vérifier que l'utilisateur est bien un manager
+  const q = query(collection(db, "users"), where("uid", "==", user.uid));
+  const userSnap = await getDocs(q);
+  const userData = userSnap.docs[0]?.data();
 
-  // Vérifier rôle manager et VA
-  if (data.role !== "manager" || data.va !== "orbital") {
-    alert("Access denied.");
-    location.href = "../../index.html";
+  if (userData?.role !== "manager") {
+    alert("Access denied. You are not a VA manager.");
+    window.location.href = "home.html";
     return;
   }
 
-  document.getElementById("vaName").innerText = data.va.toUpperCase();
+  // Récupérer les stats de la VA
+  const pilotsSnap = await getDocs(query(collection(db, "users"), where("va", "==", "orbital")));
+  const pilots = pilotsSnap.docs.map(doc => doc.data());
 
-  // Récupérer tous les pilotes de la VA
-  const usersSnap = await getDocs(collection(db, "users"));
-  let pilots = 0;
-  let totalPireps = 0;
-  const tbody = document.getElementById("pilotsBody");
-  tbody.innerHTML = "";
+  const totalPireps = pilots.reduce((sum, p) => sum + (p.pireps || 0), 0);
+  const numPilots = pilots.length;
 
-  usersSnap.forEach(docu => {
-    const u = docu.data();
-    if (u.va === "orbital" && u.role === "pilot") {
-      pilots++;
-      totalPireps += u.pireps || 0;
-
-      const tr = document.createElement("tr");
-      tr.innerHTML = `
-        <td>${u.ifcUsername}</td>
-        <td>${u.callsign}</td>
-        <td>${u.grade || "FO"}</td>
-        <td>${u.pireps || 0}</td>
-      `;
-      tbody.appendChild(tr);
-    }
-  });
-
-  document.getElementById("pilotCount").innerText = pilots;
-  document.getElementById("totalPireps").innerText = totalPireps;
-
-  addTableSearch("searchPilots", "pilotsTable");
-  addTableSort("pilotsTable");
+  document.getElementById("vaName").innerText = "ORBİTAL";
+  document.getElementById("numPilots").innerText = numPilots;
+  document.getElementById("numPireps").innerText = totalPireps;
 });
-
-// TABLE SEARCH & SORT UTILS
-function addTableSearch(inputId, tableId) {
-  const input = document.getElementById(inputId);
-  const table = document.getElementById(tableId);
-  input.addEventListener("keyup", () => {
-    const filter = input.value.toLowerCase();
-    Array.from(table.tBodies[0].rows).forEach(tr => {
-      tr.style.display = Array.from(tr.cells).some(td =>
-        td.textContent.toLowerCase().includes(filter)
-      ) ? "" : "none";
-    });
-  });
-}
-
-function addTableSort(tableId) {
-  const table = document.getElementById(tableId);
-  Array.from(table.tHead.rows[0].cells).forEach((th, index) => {
-    th.style.cursor = "pointer";
-    th.addEventListener("click", () => {
-      const tbody = table.tBodies[0];
-      const rows = Array.from(tbody.rows);
-      const asc = th.asc = !th.asc;
-      rows.sort((a, b) => {
-        const valA = a.cells[index].textContent.trim();
-        const valB = b.cells[index].textContent.trim();
-        if (!isNaN(valA) && !isNaN(valB)) return asc ? valA - valB : valB - valA;
-        return asc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-      });
-      rows.forEach(r => tbody.appendChild(r));
-    });
-  });
-}
 </script>
 
 </body>
 </html>
+
 
 
