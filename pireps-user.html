@@ -7,19 +7,116 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Fonts & Icons -->
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
-<!-- Inline style (copié depuis style.css pour que tout fonctionne) -->
 <style>
-/* ======= Style complet inline ======= */
-/* Ici tu mets exactement le contenu de style.css que tu avais copié pour le dashboard, pour ne plus dépendre du fichier externe */
-</style>
+/* ================================
+   ORBITAL – EMBEDDED STYLE
+================================ */
+:root {
+  --bg-main:#0b1020;
+  --bg-panel:#111831;
+  --bg-card:#161f3d;
+  --accent-blue:#4da6ff;
+  --accent-purple:#7b5cff;
+  --accent-pink:#ff5fa2;
+  --text-main:#e6ebff;
+  --text-muted:#9aa4d6;
+  --success:#4cff9f;
+  --border-glow:rgba(77,166,255,.35);
+}
 
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:radial-gradient(circle at top,#111831,var(--bg-main));
+  font-family:Poppins,sans-serif;
+  color:var(--text-main);
+}
+
+/* LAYOUT */
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{
+  width:260px;
+  background:linear-gradient(180deg,#0d1430,#0a0f24);
+  padding:25px 15px;
+}
+.sidebar h2{
+  font-family:Orbitron,sans-serif;
+  text-align:center;
+  color:var(--accent-blue);
+  margin-bottom:35px;
+}
+.sidebar a{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 15px;
+  margin-bottom:12px;
+  color:var(--text-main);
+  text-decoration:none;
+  border-radius:12px;
+  transition:.3s;
+}
+.sidebar a i{color:var(--accent-purple)}
+.sidebar a:hover{
+  background:rgba(77,166,255,.15);
+  box-shadow:inset 0 0 15px rgba(77,166,255,.25);
+}
+
+/* MAIN */
+.main{flex:1;padding:40px}
+.main h1{
+  font-family:Orbitron,sans-serif;
+  color:var(--accent-blue);
+  margin-bottom:5px;
+}
+.muted{color:var(--text-muted);margin-bottom:30px}
+
+/* CARD */
+.card{
+  background:linear-gradient(145deg,var(--bg-card),var(--bg-panel));
+  border-radius:18px;
+  padding:25px;
+  box-shadow:0 0 20px rgba(77,166,255,.15);
+}
+
+/* TABLE */
+table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+}
+thead{
+  background:linear-gradient(90deg,var(--accent-blue),var(--accent-purple));
+}
+th,td{
+  padding:14px;
+  text-align:center;
+  font-size:14px;
+}
+tbody tr{
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+tbody tr:hover{
+  background:rgba(77,166,255,.12);
+}
+.empty{
+  text-align:center;
+  padding:30px;
+  color:var(--text-muted);
+}
+</style>
 </head>
+
 <body>
 
 <div class="app">
+
   <!-- SIDEBAR -->
   <nav class="sidebar">
     <h2>ORBITAL</h2>
@@ -32,26 +129,29 @@
     <a href="ranks-user.html"><i class="fas fa-star"></i> Ranks</a>
   </nav>
 
-  <!-- MAIN CONTENT -->
+  <!-- MAIN -->
   <main class="main">
     <h1>Your PIREPs</h1>
     <p class="muted">All flights you have submitted</p>
 
-    <table id="pirepsTable">
-      <thead>
-        <tr>
-          <th>Flight #</th>
-          <th>Departure</th>
-          <th>Destination</th>
-          <th>Aircraft</th>
-          <th>Livery</th>
-          <th>Type</th>
-          <th>Duration</th>
-          <th>Notes</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div class="card">
+      <table id="pirepsTable">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Departure</th>
+            <th>Destination</th>
+            <th>Aircraft</th>
+            <th>Livery</th>
+            <th>Type</th>
+            <th>Duration</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
   </main>
 </div>
 
@@ -63,10 +163,7 @@ import { getFirestore, collection, query, where, getDocs } from "https://www.gst
 const firebaseConfig = {
   apiKey: "AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
   authDomain: "orbital---va-manager.firebaseapp.com",
-  projectId: "orbital---va-manager",
-  storageBucket: "orbital---va-manager.firebasestorage.app",
-  messagingSenderId: "162057702983",
-  appId: "1:162057702983:web:f8ed3f5d115c7c53cbeb62"
+  projectId: "orbital---va-manager"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -79,20 +176,22 @@ onAuthStateChanged(auth, async user => {
     return;
   }
 
-  // Query tous les PIREPs pour l'utilisateur connecté
-  const pirepsSnap = await getDocs(query(collection(db, "pireps"), where("userId", "==", user.uid)));
-  const pireps = pirepsSnap.docs.map(doc => doc.data());
+  const q = query(collection(db,"pireps"), where("userId","==",user.uid));
+  const snap = await getDocs(q);
 
   const tbody = document.querySelector("#pirepsTable tbody");
-  if (pireps.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="8">No PIREPs found</td></tr>`;
+
+  if (snap.empty) {
+    tbody.innerHTML = `<tr><td class="empty" colspan="8">No PIREPs recorded yet</td></tr>`;
     return;
   }
 
-  pireps.forEach((p, idx) => {
-    const row = document.createElement("tr");
-    row.innerHTML = `
-      <td>${idx+1}</td>
+  let i = 1;
+  snap.forEach(doc => {
+    const p = doc.data();
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i++}</td>
       <td>${p.departure || "-"}</td>
       <td>${p.destination || "-"}</td>
       <td>${p.aircraft || "-"}</td>
@@ -101,11 +200,12 @@ onAuthStateChanged(auth, async user => {
       <td>${p.duration || "-"}</td>
       <td>${p.notes || "-"}</td>
     `;
-    tbody.appendChild(row);
+    tbody.appendChild(tr);
   });
 });
 </script>
 
 </body>
 </html>
+
 
