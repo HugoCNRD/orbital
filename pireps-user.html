@@ -143,11 +143,11 @@ onAuthStateChanged(auth, async user => {
     return;
   }
 
-  const q = query(
-    collection(db, "pireps"),
-    where("uid", "==", user.uid),
-    orderBy("createdAt", "desc")
-  );
+const q = query(
+  collection(db,"pireps"),
+  where("uid","==",user.uid)
+);
+const snap = await getDocs(q);
 
   const snap = await getDocs(q);
   const tbody = document.querySelector("#pirepsTable tbody");
