@@ -1,1 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Orbital – Ranks</title>
+<link rel="icon" href="favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+<style>
+:root {
+  --bg-main:#0b1020;
+  --bg-panel:#111831;
+  --bg-card:#161f3d;
+  --accent-blue:#4da6ff;
+  --accent-purple:#7b5cff;
+  --accent-pink:#ff5fa2;
+  --text-main:#e6ebff;
+  --text-muted:#9aa4d6;
+  --success:#4cff9f;
+  --border-glow:rgba(77,166,255,.35);
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  background:radial-gradient(circle at top,#111831,var(--bg-main));
+  font-family:Poppins,sans-serif;
+  color:var(--text-main);
+}
+
+.app{display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{
+  width:260px;
+  background:linear-gradient(180deg,#0d1430,#0a0f24);
+  padding:25px 15px;
+}
+.sidebar h2{
+  font-family:Orbitron,sans-serif;
+  text-align:center;
+  color:var(--accent-blue);
+  margin-bottom:35px;
+}
+.sidebar a{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 15px;
+  margin-bottom:12px;
+  color:var(--text-main);
+  text-decoration:none;
+  border-radius:12px;
+  transition:.3s;
+}
+.sidebar a i{color:var(--accent-purple)}
+.sidebar a:hover{
+  background:rgba(77,166,255,.15);
+  box-shadow:inset 0 0 15px rgba(77,166,255,.25);
+}
+
+/* MAIN */
+.main{flex:1;padding:40px}
+.main h1{
+  font-family:Orbitron,sans-serif;
+  color:var(--accent-blue);
+}
+.muted{color:var(--text-muted);margin-bottom:30px}
+
+/* CARDS */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:25px;
+}
+
+.card{
+  background:linear-gradient(145deg,var(--bg-card),var(--bg-panel));
+  border-radius:18px;
+  padding:25px;
+  box-shadow:0 0 20px rgba(77,166,255,.15);
+  text-align:center;
+}
+
+.card h3{
+  margin-bottom:10px;
+  color:var(--accent-purple);
+}
+
+.card span{
+  font-size:26px;
+  font-weight:600;
+  color:var(--success);
+}
+
+/* VA RANK CARD */
+.va-rank{
+  grid-column:1/-1;
+  padding:40px;
+  border:2px solid var(--accent-pink);
+  box-shadow:0 0 35px rgba(255,95,162,.4);
+}
+
+.va-rank h2{
+  font-family:Orbitron,sans-serif;
+  color:var(--accent-pink);
+}
+
+.va-rank .rank{
+  font-size:38px;
+  margin:15px 0;
+  color:var(--success);
+}
+
+.va-rank .pireps{
+  color:var(--text-muted);
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<nav class="sidebar">
+  <h2>ORBITAL</h2>
+  <a href="home.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+  <a href="submit-pirep.html"><i class="fas fa-plane-departure"></i> Submit PIREP</a>
+  <a href="pireps-user.html"><i class="fas fa-list-alt"></i> Your PIREPs</a>
+  <a href="airport-info.html"><i class="fas fa-map-marker-alt"></i> Airport Info</a>
+  <a href="ranks-user.html"><i class="fas fa-star"></i> Ranks</a>
+</nav>
+
+<main class="main">
+  <h1>Your Ranks</h1>
+  <p class="muted">Pilot progression & certifications</p>
+
+  <div class="grid">
+
+    <div class="card">
+      <h3><i class="fas fa-plane"></i> Infinite Flight Rank</h3>
+      <span id="ifRank">N/A</span>
+    </div>
+
+    <div class="card">
+      <h3><i class="fas fa-headset"></i> ATC Rank</h3>
+      <span id="atcRank">N/A</span>
+    </div>
+
+    <div class="card va-rank">
+      <h2><i class="fas fa-shield-alt"></i> VA Rank</h2>
+      <div class="rank" id="vaRank">FO</div>
+      <div class="pireps">
+        Total PIREPs: <strong id="vaPireps">0</strong>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
+  authDomain: "orbital---va-manager.firebaseapp.com",
+  projectId: "orbital---va-manager"
+};
+
+const IF_API_KEY = "PUT_YOUR_API_KEY_HERE";
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  const snap = await getDoc(doc(db,"users",user.uid));
+  const data = snap.data();
+
+  const pireps = data?.pireps || 0;
+  document.getElementById("vaPireps").innerText = pireps;
+
+  // VA Rank logic
+  let vaRank = "FO";
+  if (pireps >= 50) vaRank = "Captain";
+  else if (pireps >= 20) vaRank = "Senior FO";
+  document.getElementById("vaRank").innerText = vaRank;
+
+  // Infinite Flight API
+  if (data?.ifcUsername && IF_API_KEY !== "PUT_YOUR_API_KEY_HERE") {
+    try {
+      const res = await fetch(
+        "https://api.infiniteflight.com/public/v2/users?apikey="+IF_API_KEY,
+        {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify({ discourseNames:[data.ifcUsername] })
+        }
+      );
+      const json = await res.json();
+      const u = json?.result?.[0];
+
+      document.getElementById("ifRank").innerText = u?.grade ?? "N/A";
+      document.getElementById("atcRank").innerText = u?.atcRank ?? "N/A";
+    } catch {
+      document.getElementById("ifRank").innerText = "N/A";
+      document.getElementById("atcRank").innerText = "N/A";
+    }
+  }
+});
+</script>
+
+</body>
+</html>
 
