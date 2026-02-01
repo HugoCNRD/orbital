@@ -8,41 +8,153 @@
 
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css">
-</head>
-<body>
 
+<style>
+/* ================================
+   ORBITAL – EMBEDDED STYLE
+================================ */
+:root {
+  --bg-main: #0b1020;
+  --bg-panel: #111831;
+  --bg-card: #161f3d;
+  --accent-blue: #4da6ff;
+  --accent-purple: #7b5cff;
+  --accent-pink: #ff5fa2;
+  --text-main: #e6ebff;
+  --text-muted: #9aa4d6;
+  --success: #4cff9f;
+  --border-glow: rgba(77,166,255,0.4);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin:0;
+  background: radial-gradient(circle at top, #111831, var(--bg-main));
+  font-family: 'Poppins', sans-serif;
+  color: var(--text-main);
+}
+
+/* LAYOUT */
+.app { display:flex; min-height:100vh; }
+
+/* SIDEBAR */
+.sidebar {
+  width:260px;
+  background:linear-gradient(180deg,#0d1430,#0a0f24);
+  padding:25px 15px;
+}
+.sidebar h2 {
+  font-family:'Orbitron',sans-serif;
+  text-align:center;
+  color:var(--accent-blue);
+  margin-bottom:35px;
+}
+.sidebar a {
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:12px 15px;
+  margin-bottom:12px;
+  color:var(--text-main);
+  text-decoration:none;
+  border-radius:12px;
+  transition:.3s;
+}
+.sidebar a i { color: var(--accent-purple); }
+.sidebar a:hover {
+  background: rgba(77,166,255,.15);
+  box-shadow: inset 0 0 15px rgba(77,166,255,.25);
+}
+
+/* MAIN */
+.main { flex:1; padding:40px; }
+.main h1 { font-family:'Orbitron',sans-serif; color:var(--accent-blue); margin-bottom:5px; }
+.muted { color:var(--text-muted); margin-bottom:30px; }
+
+/* STATS GRID */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px,1fr));
+  gap:25px;
+  margin-top:30px;
+}
+.card {
+  background: linear-gradient(145deg,var(--bg-card),var(--bg-panel));
+  border-radius:18px;
+  padding:25px;
+  text-align:center;
+  box-shadow:0 0 20px rgba(77,166,255,.15);
+  position: relative;
+}
+.card span {
+  display:block;
+  font-size:28px;
+  font-weight:600;
+  margin-top:10px;
+  color: var(--success);
+}
+.card::after {
+  content: "";
+  position: absolute;
+  inset:0;
+  border-radius:18px;
+  box-shadow: inset 0 0 15px var(--border-glow);
+  pointer-events:none;
+}
+
+/* BUTTONS */
+button.primary {
+  margin-top:40px;
+  padding:14px 28px;
+  background:linear-gradient(90deg,var(--accent-purple),var(--accent-pink));
+  border:none;
+  border-radius:14px;
+  font-size:16px;
+  color:white;
+  cursor:pointer;
+  transition:0.3s;
+}
+button.primary:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(255,95,162,0.5);
+}
+</style>
+</head>
+
+<body>
 <div class="app">
   <!-- SIDEBAR -->
-<nav class="sidebar">
-  <h2>ORBITAL</h2>
-  <a href="home.html"><i class="fas fa-chart-line"></i> Dashboard</a>
-  <a href="submit-pirep.html"><i class="fas fa-plane-departure"></i> Submit PIREP</a>
-  <a href="va/orbital/orbital-events.html"><i class="fas fa-calendar-alt"></i> VA Events</a>
-  <a href="va/orbital/orbital-routes.html"><i class="fas fa-route"></i> Available Routes</a>
-  <a href="pireps-user.html"><i class="fas fa-list-alt"></i> Your PIREPs</a>
-  <a href="airport-info.html"><i class="fas fa-map-marker-alt"></i> Airport Info</a>
-  <a href="ranks-user.html"><i class="fas fa-star"></i> Ranks</a>
-</nav>
+  <nav class="sidebar">
+    <h2>ORBITAL</h2>
+    <a href="home.html"><i class="fas fa-chart-line"></i> Dashboard</a>
+    <a href="submit-pirep.html"><i class="fas fa-plane-departure"></i> Submit PIREP</a>
+    <a href="va/orbital/orbital-events.html"><i class="fas fa-calendar-alt"></i> VA Events</a>
+    <a href="va/orbital/orbital-routes.html"><i class="fas fa-route"></i> Available Routes</a>
+    <a href="pireps-user.html"><i class="fas fa-list-alt"></i> Your PIREPs</a>
+    <a href="airport-info.html"><i class="fas fa-map-marker-alt"></i> Airport Info</a>
+    <a href="ranks-user.html"><i class="fas fa-star"></i> Ranks</a>
+  </nav>
 
   <!-- MAIN -->
   <main class="main">
     <h1>Welcome back, <span id="pilotName">Pilot</span></h1>
     <p class="muted">Crew Center – Your virtual aviation hub</p>
 
-    <!-- STATS -->
+    <!-- EXISTING STATS -->
     <div class="stats-grid">
       <div class="card">IFC Username <span id="ifc"></span></div>
       <div class="card">Callsign <span id="callsign"></span></div>
       <div class="card">Virtual Airline <span id="va"></span></div>
       <div class="card">Number of Flights <span id="pireps"></span></div>
-      <!-- NEW CASES -->
-      <div class="card">Grade <span id="grade">N/A</span></div>
-      <div class="card">XP <span id="xp">N/A</span></div>
-      <div class="card">ATC Rank <span id="atcrank">N/A</span></div>
-      <div class="card">Violations <span id="violations">N/A</span></div>
-      <div class="card">Online Flights <span id="onlineFlights">N/A</span></div>
-      <div class="card">Flight Count <span id="flightCount">N/A</span></div>
+    </div>
+
+    <!-- NEW IF STATS CARDS -->
+    <div class="stats-grid" style="margin-top:20px;">
+      <div class="card">Grade <span id="ifGrade">N/A</span></div>
+      <div class="card">XP <span id="ifXP">N/A</span></div>
+      <div class="card">ATC Rank <span id="ifATCRank">N/A</span></div>
+      <div class="card">Violations <span id="ifViolations">N/A</span></div>
     </div>
 
     <button class="primary" onclick="location.href='submit-pirep.html'">
@@ -59,71 +171,60 @@ import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10
 const firebaseConfig = {
   apiKey: "AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
   authDomain: "orbital---va-manager.firebaseapp.com",
-  projectId: "orbital---va-manager",
-  storageBucket: "orbital---va-manager.firebasestorage.app",
-  messagingSenderId: "162057702983",
-  appId: "1:162057702983:web:f8ed3f5d115c7c53cbeb62"
+  projectId: "orbital---va-manager"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// YOUR Infinite Flight API key here
-const IF_API_KEY = "xpn25ya68axg7fksj63jmj963jthkt6n";
-
-onAuthStateChanged(auth, async user => {
-  if (!user) {
-    window.location.href = "index.html";
-    return;
+// --- FETCH INFINITE FLIGHT STATS ---
+async function fetchIFStats(ifcForumUsername) {
+  if (!ifcForumUsername) return null;
+  try {
+    const res = await fetch("https://api.infiniteflight.com/public/v2/users", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer TON_API_KEY_ICI"
+      },
+      body: JSON.stringify({ discourseNames: [ifcForumUsername] })
+    });
+    const data = await res.json();
+    if (!data || !data.length) return null;
+    return data[0];
+  } catch(err) {
+    console.error("IF API error:", err);
+    return null;
   }
+}
 
-  const snap = await getDoc(doc(db, "users", user.uid));
+// --- ON AUTH ---
+onAuthStateChanged(auth, async user => {
+  if (!user) { window.location.href = "index.html"; return; }
+
+  const snap = await getDoc(doc(db,"users",user.uid));
   const data = snap.data();
 
-  const ifcUsername = data?.ifcUsername || "Pilot";
-
-  document.getElementById("pilotName").innerText = ifcUsername;
+  // EXISTING CARDS
+  document.getElementById("pilotName").innerText = data?.ifcUsername || "Pilot";
   document.getElementById("ifc").innerText = data?.ifcUsername || "-";
   document.getElementById("callsign").innerText = data?.callsign || "-";
   document.getElementById("va").innerText = data?.va?.toUpperCase() || "-";
   document.getElementById("pireps").innerText = data?.pireps || 0;
 
-  // Fetch Infinite Flight stats
-  try {
-    const response = await fetch("https://api.infiniteflight.com/public/v2/users", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${IF_API_KEY}`
-      },
-      body: JSON.stringify({ discourseNames: [ifcUsername] })
-    });
-
-    const result = await response.json();
-    const stats = result[0] || {};
-
-    document.getElementById("grade").innerText = stats.grade ?? "N/A";
-    document.getElementById("xp").innerText = stats.xp ?? "N/A";
-    document.getElementById("atcrank").innerText = stats.atcRank ?? "N/A";
-    document.getElementById("violations").innerText = stats.violations ?? "N/A";
-    document.getElementById("onlineFlights").innerText = stats.onlineFlights ?? "N/A";
-    document.getElementById("flightCount").innerText = stats.flightTime ? Math.floor(stats.flightTime / 60) : "N/A";
-
-  } catch(err) {
-    console.error("IF API error:", err);
-    document.getElementById("grade").innerText = "N/A";
-    document.getElementById("xp").innerText = "N/A";
-    document.getElementById("atcrank").innerText = "N/A";
-    document.getElementById("violations").innerText = "N/A";
-    document.getElementById("onlineFlights").innerText = "N/A";
-    document.getElementById("flightCount").innerText = "N/A";
-  }
+  // NEW IF STATS
+  const stats = await fetchIFStats(data?.ifcForumUsername);
+  document.getElementById("ifGrade").innerText = stats?.grade ?? "N/A";
+  document.getElementById("ifXP").innerText = stats?.xp ?? "N/A";
+  document.getElementById("ifATCRank").innerText = stats?.atcRank ?? "N/A";
+  document.getElementById("ifViolations").innerText = stats?.violations ?? "N/A";
 });
 </script>
 
 </body>
 </html>
+
 
 
 
