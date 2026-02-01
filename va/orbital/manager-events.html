@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Orbital – VA Events</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link rel="icon" href="../../favicon.ico">
+
+  <!-- Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Style -->
+  <link rel="stylesheet" href="../../css/style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+<nav class="sidebar">
+  <h2>ORBITAL VA</h2>
+
+  <!-- DASHBOARD -->
+  <a href="orbital-va-manager.html">
+    <i class="fas fa-chart-line"></i> Dashboard
+  </a>
+
+  <!-- STATISTICS -->
+  <a href="orbital-va-stats.html">
+    <i class="fas fa-chart-bar"></i> VA Statistics
+  </a>
+
+  <!-- PIREPS -->
+  <a href="orbital-va-pireps-validation.html">
+    <i class="fas fa-clipboard-check"></i> PIREPs Validation
+  </a>
+
+  <!-- LEADERBOARD -->
+  <a href="orbital-va-leaderboard.html">
+    <i class="fas fa-trophy"></i> Pilot Leaderboard
+  </a>
+
+  <!-- EVENTS -->
+  <a href="create-event.html">
+    <i class="fas fa-calendar-plus"></i> New Event
+  </a>
+  <a href="va/orbital/manager-events.html">
+    <i class="fas fa-calendar-alt"></i> VA Events
+  </a>
+
+  <!-- ROUTES -->
+  <a href="va/orbital/manager-routes.html">
+    <i class="fas fa-route"></i> VA Routes
+  </a>
+
+  <!-- PILOTS -->
+  <a href="va/orbital/manager-pilots.html">
+    <i class="fas fa-users"></i> Pilots List
+  </a>
+</nav>
+
+
+  <!-- MAIN -->
+  <main class="main">
+    <h1><i class="fas fa-calendar"></i> Orbital Events</h1>
+    <p class="muted">Upcoming events for your Virtual Airline</p>
+
+    <div class="event-grid" id="eventsGrid"></div>
+  </main>
+
+</div>
+
+<!-- EVENTS DATA -->
+<script src="orbital-events.js"></script>
+
+<script>
+  const grid = document.getElementById("eventsGrid");
+
+  events.forEach(event => {
+    const card = document.createElement("div");
+    card.className = "event-card";
+    card.innerHTML = `
+      <h3><i class="fas fa-star"></i> ${event.name}</h3>
+      <p><i class="fas fa-tag"></i> ${event.type}</p>
+      <p><i class="fas fa-plane"></i> ${event.airports}</p>
+      <p><i class="fas fa-clock"></i> ${event.datetime}</p>
+    `;
+    grid.appendChild(card);
+  });
+</script>
+
+</body>
+</html>
