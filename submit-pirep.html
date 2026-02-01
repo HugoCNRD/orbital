@@ -70,8 +70,20 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { 
+  getAuth, 
+  onAuthStateChanged 
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { 
+  getFirestore, 
+  doc, 
+  getDoc, 
+  updateDoc, 
+  increment,
+  addDoc,
+  collection,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
@@ -87,9 +99,17 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 let currentUser = null;
-onAuthStateChanged(auth, user => {
-  if (!user) window.location.href = "index.html";
-  else currentUser = user;
+let currentUserData = null;
+
+onAuthStateChanged(auth, async user => {
+  if (!user) {
+    window.location.href = "index.html";
+    return;
+  }
+
+  currentUser = user;
+  const snap = await getDoc(doc(db, "users", user.uid));
+  currentUserData = snap.data();
 });
 
 // ===== SELECT FLIGHT ROW =====
@@ -106,29 +126,45 @@ Array.from(flightsTable.rows).forEach(row => {
 
 // ===== SUBMIT PIREP =====
 window.submitPirep = async () => {
-  if (!selectedRow) { alert("Please select a flight"); return; }
+  if (!selectedRow) {
+    alert("Please select a flight");
+    return;
+  }
 
-  const flight = {
-    departure: selectedRow.cells[0].innerText,
-    destination: selectedRow.cells[1].innerText,
-    duration: selectedRow.cells[2].innerText,
-    grade: selectedRow.cells[3].innerText,
-    aircraft: selectedRow.cells[4].innerText,
-    livery: selectedRow.cells[5].innerText,
-    type: selectedRow.cells[6].innerText,
-    notes: document.getElementById("notes").value
-  };
+  if (!currentUser || !currentUserData) {
+    alert("User not loaded");
+    return;
+  }
+
+  const departure = selectedRow.cells[0].innerText;
+  const destination = selectedRow.cells[1].innerText;
+  const duration = selectedRow.cells[2].innerText;
+  const va = currentUserData.va || "unknown";
 
   try {
+    // 1️⃣ Increment PIREPs counter
     const userRef = doc(db, "users", currentUser.uid);
-    await updateDoc(userRef, { pireps: increment(1) });
+    await updateDoc(userRef, {
+      pireps: increment(1)
+    });
+
+    // 2️⃣ Create PIREP log
+    await addDoc(collection(db, "pireps"), {
+      uid: currentUser.uid,
+      departure,
+      destination,
+      duration,
+      va,
+      createdAt: serverTimestamp()
+    });
 
     alert("Your flight has been recorded!");
+
     selectedRow.classList.remove("selected");
     selectedRow = null;
     document.getElementById("notes").value = "";
 
-  } catch(err) {
+  } catch (err) {
     console.error("Error submitting PIREP:", err);
     alert("Failed to submit flight.");
   }
@@ -138,7 +174,10 @@ window.submitPirep = async () => {
 document.getElementById("searchFlights").addEventListener("keyup", e => {
   const filter = e.target.value.toLowerCase();
   Array.from(flightsTable.rows).forEach(row => {
-    row.style.display = Array.from(row.cells).some(td => td.textContent.toLowerCase().includes(filter)) ? "" : "none";
+    row.style.display = Array.from(row.cells)
+      .some(td => td.textContent.toLowerCase().includes(filter))
+      ? ""
+      : "none";
   });
 });
 
@@ -149,11 +188,12 @@ Array.from(flightsTable.tHead.rows[0].cells).forEach((th, i) => {
     const rows = Array.from(flightsTable.rows);
     const asc = !th.asc;
     th.asc = asc;
-    rows.sort((a,b) => {
+    rows.sort((a, b) => {
       const aText = a.cells[i].textContent.trim();
       const bText = b.cells[i].textContent.trim();
-      if (!isNaN(aText) && !isNaN(bText)) return asc ? aText - bText : bText - aText;
-      return asc ? aText.localeCompare(bText) : bText.localeCompare(aText);
+      return asc
+        ? aText.localeCompare(bText)
+        : bText.localeCompare(aText);
     });
     rows.forEach(r => flightsTable.appendChild(r));
   });
