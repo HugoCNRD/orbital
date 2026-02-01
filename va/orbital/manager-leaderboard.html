@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Orbital VA – Leaderboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron&family=Poppins&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#0b1020;color:#e6ebff;font-family:Poppins}
+table{width:100%;border-collapse:collapse;margin-top:30px}
+th,td{padding:14px;text-align:center}
+thead{background:#4da6ff}
+tbody tr:nth-child(even){background:#111831}
+</style>
+</head>
+<body>
+
+<h1 style="font-family:Orbitron;color:#4da6ff">Pilot Leaderboard</h1>
+
+<table>
+<thead>
+<tr><th>#</th><th>Pilot</th><th>Callsign</th><th>PIREPs</th></tr>
+</thead>
+<tbody id="rows"></tbody>
+</table>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
+  authDomain:"orbital---va-manager.firebaseapp.com",
+  projectId:"orbital---va-manager"
+});
+const db = getFirestore(app);
+
+const q = query(
+  collection(db,"users"),
+  where("va","==","orbital"),
+  orderBy("pireps","desc")
+);
+
+const snap = await getDocs(q);
+let i=1;
+snap.forEach(d=>{
+  const u=d.data();
+  rows.innerHTML+=`
+    <tr>
+      <td>${i++}</td>
+      <td>${u.ifcUsername}</td>
+      <td>${u.callsign}</td>
+      <td>${u.pireps}</td>
+    </tr>`;
+});
+</script>
+</body>
+</html>
