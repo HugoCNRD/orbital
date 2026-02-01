@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Orbital VA – Monthly Flights</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&family=Poppins:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+body{
+  margin:0;
+  background:#0b1020;
+  font-family:Poppins,sans-serif;
+  color:#e6ebff;
+}
+.app{display:flex;min-height:100vh}
+.sidebar{
+  width:260px;
+  background:#0a0f24;
+  padding:25px;
+}
+.sidebar h2{font-family:Orbitron;color:#4da6ff;text-align:center}
+.sidebar a{display:block;color:#e6ebff;text-decoration:none;margin:15px 0}
+.main{flex:1;padding:40px}
+canvas{background:#111831;border-radius:16px;padding:20px}
+</style>
+</head>
+
+<body>
+<div class="app">
+<nav class="sidebar">
+  <h2>ORBITAL VA</h2>
+  <a href="orbital-va-manager.html">Dashboard</a>
+</nav>
+
+<main class="main">
+  <h1>Flights per Month</h1>
+  <canvas id="chart" width="900" height="400"></canvas>
+</main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey:"AIzaSyA-KQGhyjrVhcstiQfqKcDQkiJjQQXf19M",
+  authDomain:"orbital---va-manager.firebaseapp.com",
+  projectId:"orbital---va-manager"
+});
+const db = getFirestore(app);
+
+const q = query(collection(db,"pireps"), where("va","==","orbital"));
+const snap = await getDocs(q);
+
+const stats = {};
+snap.forEach(d=>{
+  const date = d.data().createdAt?.toDate?.() || new Date();
+  const key = `${date.getFullYear()}-${date.getMonth()+1}`;
+  stats[key] = (stats[key]||0)+1;
+});
+
+const labels = Object.keys(stats);
+const values = Object.values(stats);
+
+const ctx = document.getElementById("chart").getContext("2d");
+ctx.fillStyle="#4da6ff";
+values.forEach((v,i)=>{
+  const x = 80 + i*80;
+  const h = v*20;
+  ctx.fillRect(x,350-h,40,h);
+  ctx.fillText(labels[i],x-10,370);
+});
+</script>
+</body>
+</html>
